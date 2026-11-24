@@ -1,11 +1,17 @@
 [project]
 name = "medagentboard"
 version = "0.1.0"
-description = "Add your description here"
+description = "Memory-Augmented LLM Multi-Agent System for HL7 FHIR R4 Medical Data Auditing (built on MedAgentBoard)"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "httpx>=0.28.1",
+    "numpy>=2.2.0",
     "openai>=1.69.0",
     "pandas>=2.2.3",
+    "pillow>=11.0.0",
     "python-dotenv>=1.1.0",
+    "starlette>=0.45.0",
+    "streamlit>=1.67.0",
+    "uvicorn>=0.34.0",
 ]

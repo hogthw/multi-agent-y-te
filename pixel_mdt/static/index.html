@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hệ thống Multi-Agent &amp; Bộ nhớ rà soát dữ liệu chuẩn HL7 FHIR R4</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-badge">FHIR</div>
+      <div>
+        <h1>
+          Hệ thống Rà soát Hồ sơ Y tế Chuẩn HL7 FHIR R4
+          <span class="tag">Multi-Agent · ColaCare</span>
+          <span class="tag tag-light">Tăng cường Bộ nhớ</span>
+        </h1>
+        <p class="subtitle">Nghiên cứu và đánh giá hiệu năng hệ thống Multi-Agent dựa trên LLM và Memory-Augmented</p>
+      </div>
+    </div>
+
+    <div class="telemetry-strip">
+      <div class="metric-pill">
+        <span class="metric-label">Vòng họp</span>
+        <strong id="m-round">0 / 2</strong>
+      </div>
+      <div class="metric-pill">
+        <span class="metric-label">Đồng thuận</span>
+        <strong id="m-consensus">0 / 3</strong>
+      </div>
+      <div class="metric-pill memory-pill">
+        <span class="metric-label">Truy xuất bộ nhớ</span>
+        <strong id="m-memory">0</strong>
+      </div>
+      <div class="metric-pill">
+        <span class="metric-label">Tổng Token</span>
+        <strong id="m-tokens">0</strong>
+      </div>
+      <div class="metric-pill">
+        <span class="metric-label">Thời gian</span>
+        <strong id="m-elapsed">0.0s</strong>
+      </div>
+      <div class="metric-pill verdict-pill" id="m-verdict-box">
+        <span class="metric-label">Kết luận</span>
+        <strong id="m-verdict">Sẵn sàng</strong>
+      </div>
+    </div>
+  </header>
+
+  <main class="workspace">
+    <!-- TRÁI: PHÒNG HỘI CHẨN PIXEL 2D NỀN SÁNG + ĐIỀU KHIỂN -->
+    <section class="stage-column">
+      <div class="stage-header">
+        <div class="phase-banner">
+          <span class="status-dot" id="live-dot"></span>
+          <span id="phase-text">Sẵn sàng — Chọn hồ sơ FHIR R4 và nhấn Bắt đầu rà soát</span>
+        </div>
+        <div class="stage-hints">
+          <span>Nhấn trực tiếp vào từng bác sĩ hoặc <strong>Kho bộ nhớ</strong> để xem chi tiết</span>
+        </div>
+      </div>
+
+      <div class="canvas-shell" id="canvas-shell">
+        <canvas id="mdt-canvas" width="960" height="600"></canvas>
+      </div>
+
+      <div class="control-card">
+        <div class="control-grid">
+          <div class="field">
+            <label for="case-select">Hồ sơ HL7 FHIR R4 mẫu (Quốc tế &amp; Việt Nam)</label>
+            <select id="case-select"></select>
+          </div>
+          <div class="field">
+            <label for="method-select">Cấu hình thực nghiệm / Đối chứng</label>
+            <select id="method-select"></select>
+          </div>
+          <div class="field" id="model-field">
+            <label for="model-select">Mô hình LLM</label>
+            <select id="model-select"></select>
+          </div>
+          <div class="field">
+            <label for="rounds-select">Số vòng</label>
+            <select id="rounds-select">
+              <option value="2" selected>2 vòng</option>
+              <option value="3">3 vòng</option>
+              <option value="1">1 vòng</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="lang-select">Ngôn ngữ</label>
+            <select id="lang-select">
+              <option value="vi" selected>Tiếng Việt</option>
+              <option value="en">Tiếng Anh</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="case-editor-row">
+          <div class="case-text-wrap">
+            <div class="case-meta-line">
+              <span id="case-gt-badge" class="badge-muted">Nhãn chuẩn: ...</span>
+              <span class="muted" style="font-size: 11px;">Có thể chỉnh sửa trực tiếp JSON hồ sơ FHIR R4 bên dưới trước khi chạy</span>
+            </div>
+            <textarea id="fhir-json-input" rows="4" spellcheck="false" placeholder="Dán dữ liệu HL7 FHIR R4 Bundle dạng JSON tại đây..."></textarea>
+          </div>
+          <div class="run-actions">
+            <button id="btn-start" class="btn-primary">Bắt đầu rà soát</button>
+            <button id="btn-stop" class="btn-secondary" disabled>Dừng phiên</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PHẢI: BẢNG GIÁM SÁT KỸ THUẬT & KẾT QUẢ THỰC NGHIỆM -->
+    <aside class="inspector-column">
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="transcript">Diễn biến</button>
+        <button class="tab-btn" data-tab="inspector">Bộ nhớ &amp; Tác nhân</button>
+        <button class="tab-btn" data-tab="benchmark">Thực nghiệm</button>
+        <button class="tab-btn" data-tab="replay">Phát lại</button>
+      </div>
+
+      <!-- TAB 1: DIỄN BIẾN -->
+      <div class="tab-panel active" id="tab-transcript">
+        <div class="consensus-card">
+          <div class="consensus-top">
+            <span>Tiến độ đồng thuận hội đồng kiểm toán FHIR</span>
+            <span id="consensus-badge" class="badge-muted">Chưa bắt đầu</span>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill" id="consensus-bar" style="width: 0%"></div>
+          </div>
+        </div>
+
+        <div id="transcript-list" class="transcript-list">
+          <div class="empty-state">
+            <p>Chưa có phiên rà soát dữ liệu FHIR nào đang chạy.</p>
+            <p class="muted">
+              Nhấn <strong>Bắt đầu rà soát</strong> để quan sát luồng tri thức từ <strong>Kho bộ nhớ</strong> truyền đến 3 Kiểm toán viên FHIR,
+              phân tích song song và phản biện đồng thuận trực quan trên sân khấu 2D.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 2: SOI BỘ NHỚ & TÁC NHÂN -->
+      <div class="tab-panel" id="tab-inspector">
+        <div class="agent-pills" id="inspector-agent-pills"></div>
+        <div id="inspector-body" class="inspector-body">
+          <div class="empty-state">
+            <p>Nhấn vào từng kiểm toán viên hoặc <strong>Kho bộ nhớ</strong> trên phòng họp 2D để kiểm tra chi tiết:</p>
+            <p class="muted">
+              - Bộ nhớ ngữ nghĩa (Quy chuẩn HL7 FHIR R4, VN-FHIR QĐ 130, LOINC/ICD-10, an toàn lâm sàng)<br />
+              - Bộ nhớ tình huống (Bài học từ ca rà soát trước và phòng tránh báo động giả)<br />
+              - Câu lệnh hệ thống (System Prompt), dữ liệu JSON gốc, độ trễ và số lượng token
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 3: BẢNG THỰC NGHIỆM -->
+      <div class="tab-panel" id="tab-benchmark">
+        <div class="replay-toolbar">
+          <span style="font-weight: 700; color: #0f172a;">Bảng kết quả thực nghiệm (Bootstrap 1.000 lần)</span>
+          <button id="btn-refresh-bench" class="btn-mini">Làm mới</button>
+        </div>
+        <div id="benchmark-body" class="benchmark-body"></div>
+      </div>
+
+      <!-- TAB 4: PHÁT LẠI LỊCH SỬ -->
+      <div class="tab-panel" id="tab-replay">
+        <div class="replay-toolbar">
+          <label>Tốc độ phát lại:</label>
+          <select id="replay-speed">
+            <option value="1">1x (Thực tế)</option>
+            <option value="2" selected>2x (Nhanh)</option>
+            <option value="4">4x (Rất nhanh)</option>
+          </select>
+          <button id="btn-refresh-logs" class="btn-mini">Tải lại</button>
+        </div>
+        <div id="logs-list" class="logs-list"></div>
+      </div>
+    </aside>
+  </main>
+
+  <script src="/static/pixel_room.js"></script>
+  <script src="/static/app.js"></script>
+</body>
+</html>

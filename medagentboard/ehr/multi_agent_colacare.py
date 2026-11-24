@@ -86,7 +86,7 @@ class BaseAgent:
                     model=self.model_name,
                     messages=[system_message, user_message],
                     response_format={"type": "json_object"},
-                    extra_body={"enable_thinking": False},
+                    # extra_body={"enable_thinking": False},
                     stream=True,
                 )
                 # Handle streaming response

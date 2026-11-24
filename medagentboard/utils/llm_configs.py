@@ -4,6 +4,43 @@ import os
 load_dotenv()
 
 LLM_MODELS_SETTINGS = {
+    "gemini-3.5-flash-lite": {
+        "api_key": os.getenv("GEMINI_API_KEY"),
+        "base_url": "https://generativelanguage.googleapis.com/v1beta/openai/",
+        "model_name": "gemini-3.5-flash-lite",
+        "comment": "Google Gemini 3.5 Flash Lite (Khuyên dùng)",
+        "reasoning": False,
+    },
+    "gemini-3.5-flash": {
+        "api_key": os.getenv("GEMINI_API_KEY"),
+        "base_url": "https://generativelanguage.googleapis.com/v1beta/openai/",
+        "model_name": "gemini-3.5-flash",
+        "comment": "Google Gemini 3.5 Flash",
+        "reasoning": False,
+    },
+    "gemini-2.5-flash": {
+        "api_key": os.getenv("GEMINI_API_KEY"),
+        "base_url": "https://generativelanguage.googleapis.com/v1beta/openai/",
+        "model_name": "gemini-2.5-flash",
+        "comment": "Google Gemini 2.5 Flash",
+        "reasoning": False,
+    },
+    "gemini-2.5-pro": {
+        "api_key": os.getenv("GEMINI_API_KEY"),
+        "base_url": "https://generativelanguage.googleapis.com/v1beta/openai/",
+        "model_name": "gemini-2.5-pro",
+        "comment": "Google Gemini 2.5 Pro",
+        "reasoning": False,
+    },
+    "gemini-3.1-flash-lite": {
+        "api_key": os.getenv("GEMINI_API_KEY"),
+        "base_url": "https://generativelanguage.googleapis.com/v1beta/openai/",
+        "model_name": "gemini-3.1-flash-lite",
+        "comment": "Google Gemini 3.1 Flash Lite",
+        "reasoning": False,
+    },
+
+
     "deepseek-v3-official": {
         "api_key": os.getenv("DEEPSEEK_API_KEY"),
         "base_url": "https://api.deepseek.com",
