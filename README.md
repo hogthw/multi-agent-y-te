@@ -80,7 +80,7 @@ uv sync
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate          # Trên Windows PowerShell: .venv\Scripts\Activate.ps1
-pip install openai pandas numpy python-dotenv starlette uvicorn httpx pillow streamlit
+pip install -r requirements.txt
 ```
 
 ### Bước 2: Cấu hình tệp `.env`
